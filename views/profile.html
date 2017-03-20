@@ -1,1 +1,16 @@
-<i>Welcom to your profile page</i>
+<% include header.html %>
+
+<div class='container'>
+    <h3>Hello <%= user.name %>
+    <div class='btn-group'>
+        <a class='btn btn-outline-primary' href='/'>Home</a>
+        <a class='btn btn-outline-primary' href='/profile'>Profile</a>
+        <a class='btn btn-outline-primary' href='/new'>New</a>
+        <a class='btn btn-outline-primary' href='/logout'>Log Out</a>
+    </div>
+
+
+</div>
+
+
+<% include footer.html %>

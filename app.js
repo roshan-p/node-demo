@@ -2,6 +2,9 @@ var express = require('express')
 var app = express()
 var body = require('body-parser').urlencoded({extended: false})
 var cookie = require('cookie-parser')()
+var multer = require('multer')
+var upload = multer({dest: 'uploads/'})
+var granted = [ ]
 app.listen(2000)
 var mysql = require('mysql');
 var db = {
@@ -11,18 +14,21 @@ var db = {
 	database:'imarket'
 }
 var pool = mysql.createPool(db)
-var granted = [ ]
+
 app.engine('html', require('ejs').renderFile)
-app.get('/', showHome)
-app.get('/list', showList);
+app.get ('/',         showHome)
+app.get ('/list',     showList);
 app.get ('/register', showRegisterPage)
 app.post('/register', body, saveNewUser)
-app.get ('/login', showLogInPage)
-app.post('/login', body, checkPassword)
-app.get('/profile', cookie, showProfilePage)
-app.get('/status', showStatus)
-app.get('/logout',cookie,showLogoutPage)
+app.get ('/login',    showLogInPage)
+app.post('/login',    body, checkPassword)
+app.get ('/profile',  cookie, showProfilePage)
+app.get ('/logout',   cookie, showLogOutPage)
+app.get ('/new',      cookie, showNewPostPage)
+app.post('/new',      upload.single('photo'), cookie, saveNewPost)
+app.get ('/status',   showStatus)
 app.use( express.static('public') )
+app.use( express.static('uploads') )
 app.use( showError )
 
 function showStatus(req, res) {
@@ -81,7 +87,6 @@ function checkPassword(req, res) {
 	})
 }
 
-
 function createCard() {
 	return parseInt( Math.random() * 1000000 ) + '-' +
 		parseInt( Math.random() * 1000000 ) + '-' +
@@ -90,19 +95,53 @@ function createCard() {
 }
 
 function showProfilePage(req, res) {
-	// 1. req.cookies.card
-	// 2. granted
-	console.log(req.cookies)
 	if (req.cookies && granted[req.cookies.card]) {
-		res.render('profile.html')
+		res.render('profile.html', { user: granted[req.cookies.card] })
 	} else {
 		res.redirect('/login')
 	}
-
 }
+
 function showLogOutPage(req, res) {
 	if (req.cookies) {
 		delete granted[req.cookies.card]
 	}
 	res.render('logout.html')
+}
+
+function showNewPostPage(req, res) {
+	if (req.cookies && granted[req.cookies.card]) {
+		res.render('new.html')
+	} else {
+		res.redirect('/login')
+	}
+}
+var fs = require('fs')
+
+function saveNewPost(req, res) {
+	if (req.cookies && granted[req.cookies.card]) {
+		var user = granted[req.cookies.card]
+		if (req.file) {
+			fs.rename(req.file.path, req.file.path + '.jpg', (error, data) => {		
+				pool.query(`
+					insert into post(title, detail, owner, photo)
+					values(?,?,?, ?)
+				`, [req.body.title, req.body.detail, user.id, 
+					req.file.filename + '.jpg'],
+				function (error, data) {
+					res.redirect('/profile')
+				})
+			})			
+		} else {
+			pool.query(`
+				insert into post(title, detail, owner)
+				values(?,?,?)
+			`, [req.body.title, req.body.detail, user.id],
+			function (error, data) {
+				res.redirect('/profile')
+			})
+		}
+	} else {
+		res.redirect('/login')
+	}
 }

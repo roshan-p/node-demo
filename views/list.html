@@ -3,8 +3,10 @@
 <div class='container'>
 <h3>Welcome to iMarket</h3>
 
-<%= post[0].title %>
-
+<% for (var p of post) { %>
+    <%= p.title %>
+    <br>
+<% } %>
 </div>
 
 <% include footer.html %>

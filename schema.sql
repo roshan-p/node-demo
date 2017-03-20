@@ -19,6 +19,7 @@ create table post(
     time    timestamp,
     owner   bigint
 );
+alter table post add photo varchar(200);
 
 insert into post(title, detail, owner)
 values('Books for sales', 
