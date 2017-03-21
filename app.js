@@ -5,6 +5,12 @@ var cookie = require('cookie-parser')()
 var multer = require('multer')
 var upload = multer({dest: 'uploads/'})
 var granted = [ ]
+/*
+-body-parser is a body parsing middleware, which populates the req.body with (for example) the value of the parametres of a POST.
+-cookie-parser parses cookies and populates req.cookies with objects bidden to cookie names.
+-Multer adds a body object and a file or files object to the request object. The body object contains the values of the text fields 
+of the form, the file or files object contains the files uploaded via the form.
+*/
 app.listen(2000)
 var mysql = require('mysql');
 var db = {
@@ -87,7 +93,7 @@ function checkPassword(req, res) {
 	})
 }
 
-function createCard() {
+function createCard() { // create cookie card
 	return parseInt( Math.random() * 1000000 ) + '-' +
 		parseInt( Math.random() * 1000000 ) + '-' +
 		parseInt( Math.random() * 1000000 ) + '-' +
@@ -95,7 +101,7 @@ function createCard() {
 }
 
 function showProfilePage(req, res) {
-	if (req.cookies && granted[req.cookies.card]) {
+	if (req.cookies && granted[req.cookies.card]) { // if have a cookie and cookie is granted
 		res.render('profile.html', { user: granted[req.cookies.card] })
 	} else {
 		res.redirect('/login')
@@ -121,7 +127,7 @@ var fs = require('fs')
 function saveNewPost(req, res) {
 	if (req.cookies && granted[req.cookies.card]) {
 		var user = granted[req.cookies.card]
-		if (req.file) {
+		if (req.file) { // if get a file request eg: image file
 			fs.rename(req.file.path, req.file.path + '.jpg', (error, data) => {		
 				pool.query(`
 					insert into post(title, detail, owner, photo)
@@ -132,7 +138,7 @@ function saveNewPost(req, res) {
 					res.redirect('/profile')
 				})
 			})			
-		} else {
+		} else { // if user put the information wihtout file
 			pool.query(`
 				insert into post(title, detail, owner)
 				values(?,?,?)
